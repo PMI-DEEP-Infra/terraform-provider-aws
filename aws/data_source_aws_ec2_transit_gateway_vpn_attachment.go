@@ -68,22 +68,33 @@ func dataSourceAwsEc2TransitGatewayVpnAttachmentRead(d *schema.ResourceData, met
 		})
 	}
 
-	log.Printf("[DEBUG] Reading EC2 Transit Gateway VPN Attachments: %s", input)
-	output, err := conn.DescribeTransitGatewayAttachments(input)
+	for {
 
-	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway VPN Attachment: %w", err)
+		log.Printf("[DEBUG] Finding EC2 VPN Connection Transit Gateway Attachment: %s", input)
+		output, err := conn.DescribeTransitGatewayAttachments(input)
+
+		if err != nil {
+			return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
+		}
+
+		if len(output.TransitGatewayAttachments) > 1 {
+			return fmt.Errorf("error reading EC2 VPN Connection (%s) Transit Gateway Attachment: multiple responses", d.Id())
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+
+			if output == nil || len(output.TransitGatewayAttachments) == 0 || output.TransitGatewayAttachments[0] == nil {
+				return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: empty response", d.Id())
+			}
+
+			transitGatewayAttachment := output.TransitGatewayAttachments[0]
+			break
+		}
+
+		log.Printf("[DEBUG] Got pagination token, thus make a request gain: %s", input.NextToken)
+		input.NextToken = output.NextToken
 	}
-
-	if output == nil || len(output.TransitGatewayAttachments) == 0 || output.TransitGatewayAttachments[0] == nil {
-		return errors.New("error reading EC2 Transit Gateway VPN Attachment: no results found")
-	}
-
-	if len(output.TransitGatewayAttachments) > 1 {
-		return errors.New("error reading EC2 Transit Gateway VPN Attachment: multiple results found, try adjusting search criteria")
-	}
-
-	transitGatewayAttachment := output.TransitGatewayAttachments[0]
+	
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
