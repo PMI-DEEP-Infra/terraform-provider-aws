@@ -636,22 +636,32 @@ func resourceAwsVpnConnectionRead(d *schema.ResourceData, meta interface{}) erro
 			},
 		}
 
-		log.Printf("[DEBUG] Finding EC2 VPN Connection Transit Gateway Attachment: %s", input)
-		output, err := conn.DescribeTransitGatewayAttachments(input)
+		for {
 
-		if err != nil {
-			return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
+			log.Printf("[DEBUG] Finding EC2 VPN Connection Transit Gateway Attachment: %s", input)
+			output, err := conn.DescribeTransitGatewayAttachments(input)
+
+			if err != nil {
+				return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
+			}
+
+			if len(output.TransitGatewayAttachments) > 1 {
+				return fmt.Errorf("error reading EC2 VPN Connection (%s) Transit Gateway Attachment: multiple responses", d.Id())
+			}
+
+			if aws.StringValue(output.NextToken) == "" {
+
+				if output == nil || len(output.TransitGatewayAttachments) == 0 || output.TransitGatewayAttachments[0] == nil {
+					return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: empty response", d.Id())
+				}
+
+				transitGatewayAttachmentID = aws.StringValue(output.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
+				break
+			}
+
+      			log.Printf("[DEBUG] Got pagination token, thus make a request gain: %s", input.NextToken)
+			input.NextToken = output.NextToken
 		}
-
-		if output == nil || len(output.TransitGatewayAttachments) == 0 || output.TransitGatewayAttachments[0] == nil {
-			return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: empty response", d.Id())
-		}
-
-		if len(output.TransitGatewayAttachments) > 1 {
-			return fmt.Errorf("error reading EC2 VPN Connection (%s) Transit Gateway Attachment: multiple responses", d.Id())
-		}
-
-		transitGatewayAttachmentID = aws.StringValue(output.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
 	}
 
 	// Set attributes under the user's control.
