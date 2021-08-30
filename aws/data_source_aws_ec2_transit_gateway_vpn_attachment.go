@@ -86,6 +86,14 @@ func dataSourceAwsEc2TransitGatewayVpnAttachmentRead(d *schema.ResourceData, met
 			if output == nil || len(output.TransitGatewayAttachments) == 0 || output.TransitGatewayAttachments[0] == nil {
 				return errors.New("error reading EC2 Transit Gateway VPN Attachment: no results found")
 			}
+			transitGatewayAttachment := output.TransitGatewayAttachments[0]
+			if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+				return fmt.Errorf("error setting tags: %w", err)
+			}
+
+			d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
+			d.Set("vpn_connection_id", transitGatewayAttachment.ResourceId)
+			d.SetId(aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId))
 			break
 		}
 
@@ -93,15 +101,7 @@ func dataSourceAwsEc2TransitGatewayVpnAttachmentRead(d *schema.ResourceData, met
 		input.NextToken = output.NextToken
 	}
 	
-        transitGatewayAttachment := output.TransitGatewayAttachments[0]
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
 
-	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
-	d.Set("vpn_connection_id", transitGatewayAttachment.ResourceId)
-
-	d.SetId(aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId))
 
 	return nil
 }
