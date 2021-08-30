@@ -78,13 +78,13 @@ func dataSourceAwsEc2TransitGatewayVpnAttachmentRead(d *schema.ResourceData, met
 		}
 
 		if len(output.TransitGatewayAttachments) > 1 {
-			return fmt.Errorf("error reading EC2 VPN Connection (%s) Transit Gateway Attachment: multiple responses", d.Id())
+			return errors.New("error reading EC2 Transit Gateway VPN Attachment: multiple results found, try adjusting search criteria")
 		}
 
 		if aws.StringValue(output.NextToken) == "" {
 
 			if output == nil || len(output.TransitGatewayAttachments) == 0 || output.TransitGatewayAttachments[0] == nil {
-				return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: empty response", d.Id())
+				return errors.New("error reading EC2 Transit Gateway VPN Attachment: no results found")
 			}
 			break
 		}
