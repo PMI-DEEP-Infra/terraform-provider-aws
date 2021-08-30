@@ -97,7 +97,7 @@ func dataSourceAwsEc2TransitGatewayVpnAttachmentRead(d *schema.ResourceData, met
 			break
 		}
 
-		log.Printf("[DEBUG] Got pagination token, thus make a request gain: %s", input.NextToken)
+		log.Println("[DEBUG] Got pagination token, thus make a request gain")
 		input.NextToken = output.NextToken
 	}
 	
