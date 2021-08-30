@@ -659,7 +659,7 @@ func resourceAwsVpnConnectionRead(d *schema.ResourceData, meta interface{}) erro
 				break
 			}
 
-      			log.Println("[DEBUG] Got pagination token, thus make a request gain")
+			log.Println("[DEBUG] Got pagination token, thus make a request gain")
 			input.NextToken = output.NextToken
 		}
 	}
