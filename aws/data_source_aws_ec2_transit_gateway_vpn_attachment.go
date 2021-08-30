@@ -86,8 +86,6 @@ func dataSourceAwsEc2TransitGatewayVpnAttachmentRead(d *schema.ResourceData, met
 			if output == nil || len(output.TransitGatewayAttachments) == 0 || output.TransitGatewayAttachments[0] == nil {
 				return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: empty response", d.Id())
 			}
-
-			transitGatewayAttachment := output.TransitGatewayAttachments[0]
 			break
 		}
 
@@ -95,7 +93,7 @@ func dataSourceAwsEc2TransitGatewayVpnAttachmentRead(d *schema.ResourceData, met
 		input.NextToken = output.NextToken
 	}
 	
-
+        transitGatewayAttachment := output.TransitGatewayAttachments[0]
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
