@@ -200,17 +200,35 @@ func ec2DescribeTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewa
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
 
-	output, err := conn.GetTransitGatewayRouteTablePropagations(input)
+	for {
+		output, err := conn.GetTransitGatewayRouteTablePropagations(input)
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		if output == nil {
+			return nil, nil
+		}
+		
+		for _, transitGatewayRouteTablePropagation := range output.TransitGatewayRouteTablePropagations {
+			if transitGatewayRouteTablePropagation == nil {
+				continue
+			}
+
+			if aws.StringValue(transitGatewayRouteTablePropagation.TransitGatewayAttachmentId) == transitGatewayRouteTableID {
+				return transitGatewayRouteTablePropagation, nil
+			}
+		
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+			
+		}
+		input.NextToken = output.NextToken
 	}
-
-	if output == nil || len(output.TransitGatewayRouteTablePropagations) == 0 {
-		return nil, nil
-	}
-
-	return output.TransitGatewayRouteTablePropagations[0], nil
+	return nil, nil
 }
 
 func ec2DescribeTransitGatewayPeeringAttachment(conn *ec2.EC2, transitGatewayAttachmentID string) (*ec2.TransitGatewayPeeringAttachment, error) {
