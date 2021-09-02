@@ -210,7 +210,7 @@ func ec2DescribeTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewa
 		if output == nil {
 			return nil, nil
 		}
-		
+
 		for _, transitGatewayRouteTablePropagation := range output.TransitGatewayRouteTablePropagations {
 			if transitGatewayRouteTablePropagation == nil {
 				continue
@@ -219,12 +219,12 @@ func ec2DescribeTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewa
 			if aws.StringValue(transitGatewayRouteTablePropagation.TransitGatewayAttachmentId) == transitGatewayRouteTableID {
 				return transitGatewayRouteTablePropagation, nil
 			}
-		
+
 		}
 
 		if aws.StringValue(output.NextToken) == "" {
 			break
-			
+
 		}
 		input.NextToken = output.NextToken
 	}
