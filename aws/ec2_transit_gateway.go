@@ -216,7 +216,7 @@ func ec2DescribeTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewa
 				continue
 			}
 
-			if aws.StringValue(transitGatewayRouteTablePropagation.TransitGatewayAttachmentId) == transitGatewayRouteTableID {
+			if aws.StringValue(transitGatewayRouteTablePropagation.TransitGatewayAttachmentId) == transitGatewayAttachmentID {
 				return transitGatewayRouteTablePropagation, nil
 			}
 
